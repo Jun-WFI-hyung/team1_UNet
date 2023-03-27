@@ -7,8 +7,7 @@ Second
 
  - test : python inference.py
 
-
--- dir structure --
+ -- dir structure --
 ╔— [Carla_Data] ┬ [rgb] ┬ [train] — *.png
 │               │       ┝ [val] — *.png
 │               │       └ [test] — *.png
