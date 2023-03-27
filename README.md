@@ -1,6 +1,4 @@
-First 
- - Check and customize Unet_config.json
-Second
+ - Check and customize Unet_config.json</br>
  - train : python train.py [W or U : Windows or Ubuntu] [T or F : load pth True or False]
    - optional arg: -p unet_epoch000.pth [Put in pth-filename]
    - e.g. python train.py U T -p unet_epoch075.pth
