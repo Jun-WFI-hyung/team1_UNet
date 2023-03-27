@@ -58,9 +58,9 @@ def save_img(infer_path, epoch, idx, max_idx, cl_keys, classes, total):
 def infer(args, cfg):
     # load argument -----------------------------------------------------
     file_name_ = args.pth
-    pth_path_ = cfg["pth_path_ubuntu"] if args.os.upper() == 'U' else cfg["pth_path_windows"]
-    data_path_ = cfg["data_path_ubuntu"] if args.os.upper() == 'U' else cfg["data_path_windows"]
-    infer_path_ = cfg["infer_path_ubuntu"] if args.os.upper() == 'U' else cfg["infer_path_windows"]
+    pth_path_ = cfg["pth_path"]
+    data_path_ = cfg["data_path"]
+    infer_path_ = cfg["infer_path"]
     prefix_name = cfg["prefix_name"]
     batch_size_ = cfg["batch_size"]
     num_workers_ = cfg["num_workers"]
