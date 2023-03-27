@@ -5,7 +5,7 @@ Second
    - optional arg: -p unet_epoch000.pth [Put in pth-filename]
    - e.g. python train.py U T -p unet_epoch075.pth
 
- - test : python inference.py
+ - test : python inference.py [W or U : Windows or Ubuntu] [Put in pth-filename]
 
 
 -- dir structure --
