@@ -8,33 +8,33 @@ Second
  - test : python inference.py
 
 
--- dir structure --
-╔— [Carla_Data] ┬ [rgb] ┬ [train] — *.png
-│               │       ┝ [val] — *.png
-│               │       └ [test] — *.png
-│               │
-│               ┝ [seg] ┬ [train] — *.png
-│               │       ┝ [val] — *.png
-│               │       └ [test] — *.png
-│               │
-│               └ classes.json
-│
-╠— [carla_pth] ┬ [log] *.txt : inference eval log folder [loss, IOU, ..]
-│              └ *.pth : pth save / load folder
-│
-╠— [infer] ┬ [img] — *.png : inference image save folder
-│          └ [log] — *.txt : inference log folder [loss, IOU, ..]
-│
-╠— [net] ┬ Unet.py
-│        └ UnetData.py
-│
-╠— [utils] ┬ accuracy.py
-│          ┝ ImgAug.py
-│          ┝ read_arg.py
-│          ┕ save_load.py
-│
-┝ inference.py
-┝ train.py
-┝ Unet.py
-┝ UnetData_ver_AD.py
-┕ Unet_config.json
+-- dir structure --<br/>
+╔— [Carla_Data] ┬ [rgb] ┬ [train] — *.png<br/>
+│               │       ┝ [val] — *.png<br/>
+│               │       └ [test] — *.png<br/>
+│               │<br/>
+│               ┝ [seg] ┬ [train] — *.png<br/>
+│               │       ┝ [val] — *.png<br/>
+│               │       └ [test] — *.png<br/>
+│               │<br/>
+│               └ classes.json<br/>
+│<br/>
+╠— [carla_pth] ┬ [log] *.txt : inference eval log folder [loss, IOU, ..]<br/>
+│              └ *.pth : pth save / load folder<br/>
+│<br/>
+╠— [infer] ┬ [img] — *.png : inference image save folder<br/>
+│          └ [log] — *.txt : inference log folder [loss, IOU, ..]<br/>
+│<br/>
+╠— [net] ┬ Unet.py<br/>
+│        └ UnetData.py<br/>
+│<br/>
+╠— [utils] ┬ accuracy.py<br/>
+│          ┝ ImgAug.py<br/>
+│          ┝ read_arg.py<br/>
+│          ┕ save_load.py<br/>
+│<br/>
+┝ inference.py<br/>
+┝ train.py<br/>
+┝ Unet.py<br/>
+┝ UnetData_ver_AD.py<br/>
+┕ Unet_config.json<br/>
