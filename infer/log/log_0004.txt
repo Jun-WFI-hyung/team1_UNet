@@ -1,0 +1,27 @@
+loss mean = 3.051411
+FPS : 0.66091 sec
+Inference time : 0.35981 sec
+mIOU = 0.016798
+  - Unlabeled : 0
+  - Building : 0.005592
+  - Fence : 0.0
+  - Other : 0.0
+  - Pedestrian : 0
+  - Pole : 0.0
+  - RoadLine : 0.000405
+  - Road : 0.120457
+  - SideWalk : 0.001045
+  - Vegetation : 0.167822
+  - Vehicles : 0.0
+  - Wall : 0.0
+  - TrafficSign : 0.0
+  - Sky : 0.00203
+  - Ground : 0.0
+  - Bridge : 0
+  - RailTrack : 0
+  - GuardRail : 0.0
+  - TrafficLight : 0.0
+  - Static : 0.0
+  - Dynamic : 0.0
+  - Water : 0
+  - Terrain : 0.0

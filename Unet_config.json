@@ -1,0 +1,17 @@
+{
+    "epoch": 300,
+    "pth_path_ubuntu": "./carla_pth",
+    "data_path_ubuntu": "./Carla_Data",
+    "infer_path_ubuntu": "./infer",
+    "pth_path_windows": "./carla_pth",
+    "data_path_windows": "./Carla_Data",
+    "infer_path_windows": "./infer",
+    "prefix_name": "unet_epoch",
+    "shuffle":true,
+    "data_rate":0.5,
+    "learning_rate":1e-4,
+    "batch_size": 1,
+    "num_workers": 0,
+    "depth": 4,
+    "img_channel": 3
+}
