@@ -21,9 +21,9 @@ def train(args, cfg):
     # load argument -----------------------------------------------------
     file_name_ = args.pth
     epoch_ = cfg["epoch"]
-    pth_path_ = cfg["pth_path_ubuntu"] if args.os.upper() == 'U' else cfg["pth_path_windows"]
-    data_path_ = cfg["data_path_ubuntu"] if args.os.upper() == 'U' else cfg["data_path_windows"]
-    infer_path_ = cfg["infer_path_ubuntu"] if args.os.upper() == 'U' else cfg["infer_path_windows"]
+    pth_path_ = cfg["pth_path"] 
+    data_path_ = cfg["data_path"]
+    infer_path_ = cfg["infer_path"]
     prefix_name = cfg["prefix_name"]
     shuffle_ = cfg["shuffle"]
     data_rate_ = cfg["data_rate"]
