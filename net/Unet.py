@@ -20,10 +20,11 @@ from PIL import Image
 # 최종 클래스 매핑 -> (컨벌루션,배치정규화,ReLU) 2번 컨벌루션(1x1)1번
 
 class Unet(nn.Module):
-    def __init__(self, class_num_:int, depth_:int, image_ch_:int):
+    def __init__(self, class_num_:int, depth_:int, image_ch_:int, target_ch_:int=None):
         super(Unet,self).__init__()
         self.image_ch = image_ch_
         self.class_num = class_num_
+        self.target_ch = target_ch_
         self.depth = depth_
         self.module_list = nn.ModuleList()
         self.samplings = nn.ModuleList()
@@ -112,7 +113,7 @@ class Unet(nn.Module):
             else:
                 self.samplings.append(nn.Conv2d(
                     in_channels=ch_//2,
-                    out_channels=self.class_num,
+                    out_channels=self.class_num if self.target_ch is None else 1,
                     kernel_size=1,
                     stride=1,
                     padding=0,

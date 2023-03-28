@@ -66,10 +66,11 @@ def infer(args, cfg):
     num_workers_ = cfg["num_workers"]
     depth_ = cfg["depth"]
     img_channel_ = cfg["img_channel"]
+    target_channel_ = cfg["target_channel"]
     
     # dataset load ------------------------------------------------------
     print(f"Data init  " + "="*60)
-    infer_data = UnetData(data_path_, mode="I")
+    infer_data = UnetData(data_path_, mode="I", depth_=depth_, target_ch=target_channel_)
     infer_loader = DataLoader(infer_data, batch_size=batch_size_, num_workers=num_workers_, shuffle=False)
     class_num = len(infer_data.class_keys)
     print(f"Data init complete  " + "="*51)
@@ -77,7 +78,7 @@ def infer(args, cfg):
     # create network ----------------------------------------------------
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(f"Available Device = {device}")
-    model = Unet(class_num_=class_num, depth_=depth_, image_ch_=img_channel_).to(device)
+    model = Unet(class_num_=class_num, depth_=depth_, image_ch_=img_channel_, target_ch_=target_channel_).to(device)
     acc = Accuracy(class_num)
 
     loss_func = nn.CrossEntropyLoss().to(device)
