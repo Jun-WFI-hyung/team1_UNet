@@ -15,8 +15,9 @@ from torch.utils.data import DataLoader
 from torchvision import transforms as transforms
 
 class UnetData(Dataset):
-    def __init__(self, data_path, mode=None, depth_=4):
+    def __init__(self, data_path, mode=None, depth_=4, target_ch=None):
         super(UnetData,self).__init__()
+        self.target_ch = target_ch
 
         # load class information -------------------------------------------
         with open(os.path.join(data_path, "classes.json")) as f:
@@ -71,9 +72,14 @@ class UnetData(Dataset):
 
     def label_init(self, index):
         ch_ = []
-        for class_ in self.class_keys:
-            matches = np.all(self.label_[index] == self.classes[class_], axis=2).astype(np.float32)
+        if self.target_ch is None:            
+            for class_ in self.class_keys:
+                matches = np.all(self.label_[index] == self.classes[class_], axis=2).astype(np.float32)
+                ch_.append(matches)
+        else :
+            matches = np.all(self.label_[index] == self.classes[self.class_keys[self.target_ch]], axis=2).astype(np.float32)
             ch_.append(matches)
+
         return np.array(ch_)
 
 

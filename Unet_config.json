@@ -10,5 +10,6 @@
     "batch_size": 1,
     "num_workers": 0,
     "depth": 4,
-    "img_channel": 3
+    "img_channel": 3,
+    "target_channel": 6
 }

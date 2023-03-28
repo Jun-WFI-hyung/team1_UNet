@@ -32,22 +32,23 @@ def train(args, cfg):
     num_workers_ = cfg["num_workers"]    
     depth_ = cfg["depth"]
     img_channel_ = cfg["img_channel"]
+    target_channel_ = cfg["target_channel"]
 
     # dataset load ------------------------------------------------------
     print(f"Data init  " + "="*60)
-    train_data = UnetData(data_path_, mode='T')
-    eval_data = UnetData(data_path_, mode='V')
+    train_data = UnetData(data_path_, mode='T', depth_=depth_, target_ch=target_channel_)
+    eval_data = UnetData(data_path_, mode='V', depth_=depth_, target_ch=target_channel_)
     train_loader = DataLoader(train_data, batch_size=batch_size_, shuffle=shuffle_, num_workers=num_workers_)
     eval_loader = DataLoader(eval_data, batch_size=batch_size_, shuffle=shuffle_, num_workers=num_workers_)
     print(f"Data init complete  " + "="*51)
 
     # create network ----------------------------------------------------
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = Unet(class_num_=len(train_data.class_keys), depth_=depth_, image_ch_=img_channel_).to(device)
+    model = Unet(class_num_=len(train_data.class_keys), depth_=depth_, image_ch_=img_channel_, target_ch_=target_channel_).to(device)
     print(f"Available Device = {device}")
 
-    # loss_func = nn.BCEWithLogitsLoss().to(device)
-    loss_func = nn.CrossEntropyLoss().to(device)
+    loss_func = nn.BCEWithLogitsLoss().to(device)
+    # loss_func = nn.CrossEntropyLoss().to(device)
     optim = torch.optim.Adam(model.parameters(), lr=lr_)
     acc = Accuracy(len(eval_data.class_keys))
 
