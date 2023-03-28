@@ -39,16 +39,17 @@ def save_log(infer_path, epoch, loss, cl_key, IOU, mIOU, F_time, E_time):
 
 
 
-def save_img(infer_path, epoch, idx, max_idx, cl_keys, classes, total):
+def save_img(infer_path, epoch, idx, output, cl_keys, classes, total):
     save_path = os.path.join(infer_path, "img")
     file_name = "epoch_%04d_%02d.png" % (epoch, idx)
 
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-    img = np.zeros((max_idx.shape[0], max_idx.shape[1], 3), dtype=np.uint8)
+    print(f"output shape = {output.shape}")
+    img = np.zeros((output.shape[2], output.shape[3], 3), dtype=np.uint8)
     for cl_idx, cl in enumerate(cl_keys):
-        img[(max_idx == cl_idx).cpu().numpy()] = np.array(classes[cl])
+        img[(output[0,0,:,:] >= 1.0).cpu()] = np.array([255,255,255])
     
     print(f"save result ----- {idx+1} / {total}")
     cv2.imwrite(os.path.join(save_path, file_name), img)
@@ -81,8 +82,8 @@ def infer(args, cfg):
     model = Unet(class_num_=class_num, depth_=depth_, image_ch_=img_channel_, target_ch_=target_channel_).to(device)
     acc = Accuracy(class_num)
 
-    loss_func = nn.CrossEntropyLoss().to(device)
-    # loss_func = nn.BCEWithLogitsLoss().to(device)
+    # loss_func = nn.CrossEntropyLoss().to(device)
+    loss_func = nn.BCEWithLogitsLoss().to(device)
 
     # initialize model --------------------------------------------------
     model, epoch = load_net(pth_path_, file_name_, prefix_name, model)
@@ -103,6 +104,7 @@ def infer(args, cfg):
             infer_output = model(infer_input)
             infer_end = time.time()
             elapsed_time.append(infer_end - infer_start)
+            print(torch.unique(infer_output))
 
             img_mIOU = acc.compute_mIOU(infer_output, infer_label)
             
@@ -112,7 +114,7 @@ def infer(args, cfg):
             save_img(infer_path_, 
                      epoch, 
                      idx, 
-                     acc.max_idx,
+                     infer_output,
                      infer_data.class_keys,
                      infer_data.classes,
                      len(infer_data))
