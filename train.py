@@ -48,10 +48,8 @@ def train(args, cfg):
     model = Unet(class_num_=class_num, depth_=depth_, image_ch_=img_channel_, target_ch_=target_channel_).to(device)
     print(f"Available Device = {device}")
 
-    loss_func = nn.BCEWithLogitsLoss().to(device)
-    # loss_func = nn.CrossEntropyLoss().to(device)
+    loss_func = DiceLoss_BIN(class_num)
     optim = torch.optim.Adam(model.parameters(), lr=lr_)
-    iou = IOU(class_num) if target_channel_ is None else IOU(2)
 
     train_cnt_max = int(len(train_data) * data_rate_)
     eval_cnt_max = int(len(eval_data) * 0.05)
@@ -75,17 +73,15 @@ def train(args, cfg):
             print(f"epoch = {e} // idx = {idx}", end="")
             train_input = i[0].to(device)
             train_label = i[1].to(device)
-
             optim.zero_grad()
 
             train_output = model(train_input)
-
             train_loss = loss_func(train_output, train_label)
-            train_loss.backward()
+            train_loss.backward(retain_graph=True)
 
             optim.step()
             loss_arr += [train_loss.item()]
-            print(f" // loss mean = {np.mean(loss_arr)}")
+            print(f" // Dice Loss = {np.mean(loss_arr)*100:.2f} %")
             if idx >= train_cnt_max: break
         
         print("")
@@ -98,23 +94,16 @@ def train(args, cfg):
                 print(f"epoch = {e} // eval = {idx}", end="")
                 eval_input = i[0].to(device)
                 eval_label = i[1].to(device)
-
                 eval_output = model(eval_input)
-
-                img_IOU = iou.IOU_bin(eval_output, eval_label)
                 eval_loss = loss_func(eval_output, eval_label)
-
                 loss_arr += [eval_loss.item()]
-                print(f" // loss mean : {np.mean(loss_arr)}", end="")
-                print(f"  //  IOU : {img_IOU*100:.2f}")
+                print(f" // Dice Loss = {np.mean(loss_arr)*100:.2f} %")
 
                 if idx >= eval_cnt_max: break
-
-            epoch_IOU = iou.IOU_out()
         
         print("")
 
-        save_net(pth_path_, model, optim, e, np.mean(loss_arr), epoch_IOU)
+        save_net(pth_path_, model, optim, e, np.mean(loss_arr)*100)
 
 
 

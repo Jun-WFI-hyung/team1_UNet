@@ -17,7 +17,7 @@ from torchvision import transforms as transforms
 
 
 
-def save_log(infer_path, epoch, loss, mIOU, F_time, E_time):
+def save_log(infer_path, epoch, loss, F_time, E_time):
     log_path = os.path.join(infer_path, "log")
     log_file_name = "log_%04d.txt"%epoch
     if not os.path.exists(log_path):
@@ -27,13 +27,11 @@ def save_log(infer_path, epoch, loss, mIOU, F_time, E_time):
         f.write(f"loss mean = {np.round(loss, 6)}\n")
         f.write(f"FPS : {F_time:.5f} sec\n")
         f.write(f"Inference time : {np.mean(E_time):.5f} sec\n")
-        f.write(f"mIOU = {np.round(mIOU, 6)}\n")
 
     print("\n **  saved log  **")
-    print(f" - loss mean      : {np.round(loss, 6)}")
+    print(f" - IOU - DiceLoss : {loss*100:.2f} %")
     print(f" - FPS            : {F_time:.5f} sec")
     print(f" - Inference time : {np.mean(E_time):.5f} sec")
-    print(f" - IOU            : {np.round(mIOU, 6) * 100:.2f} %")
 
 
 
@@ -70,18 +68,14 @@ def infer(args, cfg):
     print(f"Data init  " + "="*60)
     infer_data = UnetData(data_path_, mode="I", depth_=depth_, target_ch=target_channel_)
     infer_loader = DataLoader(infer_data, batch_size=batch_size_, num_workers=num_workers_, shuffle=False)
-    class_num = len(infer_data.class_keys) if target_channel_ is not None else 1
+    class_num = len(infer_data.class_keys) if target_channel_ is None else 1
     print(f"Data init complete  " + "="*51)
 
     # create network ----------------------------------------------------
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(f"Available Device = {device}")
     model = Unet(class_num_=class_num, depth_=depth_, image_ch_=img_channel_, target_ch_=target_channel_).to(device)
-    iou = IOU(class_num) if target_channel_ is None else IOU(2)
-
-    # loss_func = nn.CrossEntropyLoss().to(device)
-    loss_func = nn.BCEWithLogitsLoss().to(device)
-    loss_func = DiceLoss_BIN()
+    loss_func = DiceLoss_BIN(class_num)
 
     # initialize model --------------------------------------------------
     model, epoch = load_net(pth_path_, file_name_, prefix_name, model)
@@ -103,8 +97,6 @@ def infer(args, cfg):
             infer_end = time.time()
             elapsed_time.append(infer_end - infer_start)
 
-            img_IOU = iou.IOU_bin(infer_output, infer_label)  
-
             infer_loss = loss_func(infer_output, infer_label)
             loss_arr += [infer_loss.item()]
 
@@ -117,11 +109,9 @@ def infer(args, cfg):
         fps_end = time.time()
         fps_time = (fps_end - fps_start) / cnt
 
-        epoch_IOU = iou.IOU_out()
         save_log(infer_path_, 
                  epoch, 
                  np.mean(loss_arr),
-                 epoch_IOU.cpu(),
                  fps_time,
                  elapsed_time)
         
