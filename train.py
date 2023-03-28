@@ -6,14 +6,14 @@ from utils.save_load import *
 from utils.IOU import *
 from utils.read_arg import *
 
-import os, cv2, json
+import os, cv2, json, time
 import numpy as np
 
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import transforms as transforms
-# from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter as writer
 
 
 def train(args, cfg):
@@ -66,44 +66,52 @@ def train(args, cfg):
 
     # start cycle -------------------------------------------------------
     for e in range(start_epoch+1, start_epoch + epoch_ + 1):
+        e_start = time.time()
         model.train()
         loss_arr = []
 
         for idx, i in enumerate(train_loader):
-            print(f"epoch = {e} // idx = {idx}", end="")
+            start = time.time()
+            print(f"epoch : {e} // idx : {idx}", end="")
             train_input = i[0].to(device)
             train_label = i[1].to(device)
             optim.zero_grad()
 
             train_output = model(train_input)
             train_loss = loss_func(train_output, train_label)
-            train_loss.backward(retain_graph=True)
+            train_loss.backward()
 
             optim.step()
             loss_arr += [train_loss.item()]
-            print(f" // Dice Loss = {np.mean(loss_arr)*100:.2f} %")
+            end = time.time()            
+            print(f" // Dice Loss : {100-np.mean(loss_arr)*100:.5f} % // {end-start:.5f} sec")
             if idx >= train_cnt_max: break
-        
+
+        writer.add_scalar("IOU_train", 100-np.mean(loss_arr)*100, e)
         print("")
         
         with torch.no_grad():
             model.eval()
-            loss_arr = []
+            eval_loss_arr = []
 
             for idx, i in enumerate(eval_loader):
-                print(f"epoch = {e} // eval = {idx}", end="")
+                start = time.time()
+                print(f"epoch : {e} // eval : {idx}", end="")
                 eval_input = i[0].to(device)
                 eval_label = i[1].to(device)
                 eval_output = model(eval_input)
                 eval_loss = loss_func(eval_output, eval_label)
-                loss_arr += [eval_loss.item()]
-                print(f" // Dice Loss = {np.mean(loss_arr)*100:.2f} %")
+                eval_loss_arr += [eval_loss.item()]
+                end = time.time()
+                print(f" // Dice Loss : {100-np.mean(eval_loss_arr)*100:.5f} % // {end-start:.5f} sec")
 
                 if idx >= eval_cnt_max: break
+            writer.add_scalar("IOU_val", 100-np.mean(eval_loss_arr)*100, e)
         
         print("")
-
-        save_net(pth_path_, model, optim, e, np.mean(loss_arr)*100)
+        e_end = time.time()
+        print(f" epoch elapsed time : {e_end-e_start:.5f} sec")
+        save_net(pth_path_, model, optim, e, 100-np.mean(loss_arr)*100, e_end-e_start)
 
 
 

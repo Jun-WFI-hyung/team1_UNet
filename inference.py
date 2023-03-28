@@ -13,7 +13,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import transforms as transforms
-# from torch.utils.tensorboard import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter as writer
 
 
 
@@ -24,12 +24,12 @@ def save_log(infer_path, epoch, loss, F_time, E_time):
         os.makedirs(log_path)
 
     with open(os.path.join(log_path, log_file_name), "w", encoding="utf-8") as f:
-        f.write(f"loss mean = {np.round(loss, 6)}\n")
+        f.write(f"IOU : {loss:.5f} %\n")
         f.write(f"FPS : {F_time:.5f} sec\n")
         f.write(f"Inference time : {np.mean(E_time):.5f} sec\n")
 
     print("\n **  saved log  **")
-    print(f" - IOU - DiceLoss : {loss*100:.2f} %")
+    print(f" - IOU - DiceLoss : {loss:.5f} %")
     print(f" - FPS            : {F_time:.5f} sec")
     print(f" - Inference time : {np.mean(E_time):.5f} sec")
 
@@ -111,7 +111,7 @@ def infer(args, cfg):
 
         save_log(infer_path_, 
                  epoch, 
-                 np.mean(loss_arr),
+                 100-np.mean(loss_arr)*100,
                  fps_time,
                  elapsed_time)
         

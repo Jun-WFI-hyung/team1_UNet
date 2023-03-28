@@ -36,14 +36,15 @@ class DiceLoss_BIN(nn.Module):
     
     def forward(self, output:torch.Tensor, label:torch.Tensor):
         smooth = 1e-5
-        output = (output >= 1).to(torch.int8)
-        px_hash,_ = torch.sort(label.view(-1).to(torch.int8) * 2 + output.view(-1))
-        px_hash = torch.bincount(px_hash, minlength=4).view(-1, 2)
+        output = output.requires_grad_(True)
+        label = label.requires_grad_(True)
 
-        inter = px_hash.diag()
-        union = px_hash.sum(dim=1) + px_hash.sum(dim=0) - inter
+        output = (output >= 1).to(torch.float32).view(-1)
+        label = label.view(-1)
 
-        return (1 - (2*inter[-1]+smooth) / (union+smooth))[1]
+        inter = (label * output).sum()
+        union = output.sum() + label.sum() - inter
+        return 1 - (2*inter+smooth) / (union+smooth)
 
 
 # a = torch.Tensor([[0,0,0],[0,0,0],[0,0,1]])
