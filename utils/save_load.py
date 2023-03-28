@@ -6,7 +6,7 @@ from glob import glob
 
 
 
-def save_net(pth_path, model, optim, epoch, loss, IOU):
+def save_net(pth_path, model, optim, epoch, iou):
     if not os.path.exists(pth_path):
         os.makedirs(pth_path)
 
@@ -19,7 +19,7 @@ def save_net(pth_path, model, optim, epoch, loss, IOU):
         os.makedirs(log_path)
 
     with open(os.path.join(log_path, log_file_name), "w", encoding="utf-8") as f:
-        f.write(f"epoch : {epoch}\nloss mean : {loss:.6f}\nIOU = {IOU*100:.2f}\n\n")
+        f.write(f"epoch : {epoch}\nDiceLoss_IOU : {iou:.2f}\n\n")
 
     print("save network")
     print("=" * 90 + "\n")

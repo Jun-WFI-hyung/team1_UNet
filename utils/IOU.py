@@ -32,7 +32,7 @@ class DiceLoss_BIN(nn.Module):
     def __init__(self, class_num):
         super(DiceLoss_BIN,self).__init__()
         self.class_num = class_num
-        if class_num != 1: raise Exception("Not binary class")
+        if class_num != 1: raise Exception("Not binary class -- DiceLoss")
     
     def forward(self, output:torch.Tensor, label:torch.Tensor):
         smooth = 1e-5
@@ -43,7 +43,7 @@ class DiceLoss_BIN(nn.Module):
         inter = px_hash.diag()
         union = px_hash.sum(dim=1) + px_hash.sum(dim=0) - inter
 
-        return 1 - (2*inter[-1]+smooth) / (union+smooth)
+        return (1 - (2*inter[-1]+smooth) / (union+smooth))[1]
 
 
 # a = torch.Tensor([[0,0,0],[0,0,0],[0,0,1]])

@@ -70,7 +70,7 @@ def infer(args, cfg):
     print(f"Data init  " + "="*60)
     infer_data = UnetData(data_path_, mode="I", depth_=depth_, target_ch=target_channel_)
     infer_loader = DataLoader(infer_data, batch_size=batch_size_, num_workers=num_workers_, shuffle=False)
-    class_num = len(infer_data.class_keys)
+    class_num = len(infer_data.class_keys) if target_channel_ is not None else 1
     print(f"Data init complete  " + "="*51)
 
     # create network ----------------------------------------------------
@@ -81,6 +81,7 @@ def infer(args, cfg):
 
     # loss_func = nn.CrossEntropyLoss().to(device)
     loss_func = nn.BCEWithLogitsLoss().to(device)
+    loss_func = DiceLoss_BIN()
 
     # initialize model --------------------------------------------------
     model, epoch = load_net(pth_path_, file_name_, prefix_name, model)

@@ -1,4 +1,3 @@
-loss mean = 0.018729
-FPS : 0.48141 sec
-Inference time : 0.35879 sec
-mIOU = 0.34852999448776245
+loss mean = 0.302941
+FPS : 0.48375 sec
+Inference time : 0.36035 sec

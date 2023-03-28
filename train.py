@@ -40,7 +40,7 @@ def train(args, cfg):
     eval_data = UnetData(data_path_, mode='V', depth_=depth_, target_ch=target_channel_)
     train_loader = DataLoader(train_data, batch_size=batch_size_, shuffle=shuffle_, num_workers=num_workers_)
     eval_loader = DataLoader(eval_data, batch_size=batch_size_, shuffle=shuffle_, num_workers=num_workers_)
-    class_num = len(train_data.class_keys)
+    class_num = len(train_data.class_keys) if target_channel_ is None else 1
     print(f"Data init complete  " + "="*51)
 
     # create network ----------------------------------------------------
