@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 
 import torch, os
-import numpy as np
-from glob import glob
 
 
-
-def save_net(pth_path, model, optim, epoch, iou, e_time):
+def save_net(pth_path, model, optim, epoch, train_iou, eval_iou, e_time):
     if not os.path.exists(pth_path):
         os.makedirs(pth_path)
 
@@ -20,10 +17,11 @@ def save_net(pth_path, model, optim, epoch, iou, e_time):
 
     with open(os.path.join(log_path, log_file_name), "w", encoding="utf-8") as f:
         f.write(f"epoch : {epoch}\n")
-        f.write(f"DiceLoss_IOU : {iou:.2f} %\n")
+        f.write(f"train_IOU : {train_iou:.5f} %\n")
+        f.write(f"eval _IOU : {eval_iou:.5f} %\n")
         f.write(f"elapsed time : {e_time:.5f} sec\n")
 
-    print("save network")
+    print("  - save network")
     print("=" * 90 + "\n")
 
 

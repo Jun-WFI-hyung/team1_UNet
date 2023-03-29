@@ -39,7 +39,7 @@ class DiceLoss_BIN(nn.Module):
         output = output.requires_grad_(True)
         label = label.requires_grad_(True)
 
-        output = (output >= 1).to(torch.float32).view(-1)
+        output = (output > 0.5).to(torch.float32).view(-1)
         label = label.view(-1)
 
         inter = (label * output).sum()

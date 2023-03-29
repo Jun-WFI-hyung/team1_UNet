@@ -10,10 +10,9 @@ import os, cv2, json, time
 import numpy as np
 
 import torch
-import torch.nn as nn
+import torch.backends.cudnn as cudnn
 from torch.utils.data import DataLoader
 from torchvision import transforms as transforms
-# from torch.utils.tensorboard import SummaryWriter as writer
 
 
 
@@ -52,6 +51,10 @@ def save_img(infer_path, epoch, idx, output, total):
 
 
 def infer(args, cfg):
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print(f"Available Device = {device}")
+    cudnn.enabled = True
+    
     # load argument -----------------------------------------------------
     file_name_ = args.pth
     pth_path_ = cfg["pth_path"]
@@ -72,8 +75,6 @@ def infer(args, cfg):
     print(f"Data init complete  " + "="*51)
 
     # create network ----------------------------------------------------
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print(f"Available Device = {device}")
     model = Unet(class_num_=class_num, depth_=depth_, image_ch_=img_channel_, target_ch_=target_channel_).to(device)
     loss_func = DiceLoss_BIN(class_num)
 

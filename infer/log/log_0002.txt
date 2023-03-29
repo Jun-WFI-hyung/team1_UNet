@@ -1,3 +1,0 @@
-IOU : 0.00000 %
-FPS : 0.49720 sec
-Inference time : 0.37743 sec

@@ -6,17 +6,19 @@ from utils.save_load import *
 from utils.IOU import *
 from utils.read_arg import *
 
-import os, cv2, json, time
+import json, time
 import numpy as np
 
 import torch
-import torch.nn as nn
 from torch.utils.data import DataLoader
+import torch.backends.cudnn as cudnn
 from torchvision import transforms as transforms
-from torch.utils.tensorboard import SummaryWriter as writer
 
 
 def train(args, cfg):
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print(f"Available Device = {device}")
+    cudnn.enabled = True
 
     # load argument -----------------------------------------------------
     file_name_ = args.pth
@@ -44,11 +46,10 @@ def train(args, cfg):
     print(f"Data init complete  " + "="*51)
 
     # create network ----------------------------------------------------
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = Unet(class_num_=class_num, depth_=depth_, image_ch_=img_channel_, target_ch_=target_channel_).to(device)
-    print(f"Available Device = {device}")
 
     loss_func = DiceLoss_BIN(class_num)
+    sigmoid = nn.Sigmoid()
     optim = torch.optim.Adam(model.parameters(), lr=lr_)
 
     train_cnt_max = int(len(train_data) * data_rate_)
@@ -78,6 +79,7 @@ def train(args, cfg):
             optim.zero_grad()
 
             train_output = model(train_input)
+            train_output = sigmoid(train_output)
             train_loss = loss_func(train_output, train_label)
             train_loss.backward()
 
@@ -87,7 +89,7 @@ def train(args, cfg):
             print(f" // Dice Loss : {100-np.mean(loss_arr)*100:.5f} % // {end-start:.5f} sec")
             if idx >= train_cnt_max: break
 
-        writer.add_scalar("IOU_train", 100-np.mean(loss_arr)*100, e)
+        train_loss = 100 - np.mean(loss_arr)*100
         print("")
         
         with torch.no_grad():
@@ -106,12 +108,12 @@ def train(args, cfg):
                 print(f" // Dice Loss : {100-np.mean(eval_loss_arr)*100:.5f} % // {end-start:.5f} sec")
 
                 if idx >= eval_cnt_max: break
-            writer.add_scalar("IOU_val", 100-np.mean(eval_loss_arr)*100, e)
+            eval_loss = 100 - np.mean(eval_loss_arr)*100
         
         print("")
         e_end = time.time()
-        print(f" epoch elapsed time : {e_end-e_start:.5f} sec")
-        save_net(pth_path_, model, optim, e, 100-np.mean(loss_arr)*100, e_end-e_start)
+        print(f"  - epoch elapsed time : {e_end-e_start:.5f} sec")
+        save_net(pth_path_, model, optim, e, train_loss, eval_loss, e_end-e_start)
 
 
 
