@@ -3,7 +3,7 @@
 from net.Unet import Unet
 from net.UnetData import UnetData
 from utils.save_load import *
-from utils.accuracy import *
+from utils.IOU import *
 from utils.read_arg import *
 
 import os, cv2, json
@@ -40,17 +40,18 @@ def train(args, cfg):
     eval_data = UnetData(data_path_, mode='V', depth_=depth_, target_ch=target_channel_)
     train_loader = DataLoader(train_data, batch_size=batch_size_, shuffle=shuffle_, num_workers=num_workers_)
     eval_loader = DataLoader(eval_data, batch_size=batch_size_, shuffle=shuffle_, num_workers=num_workers_)
+    class_num = len(train_data.class_keys)
     print(f"Data init complete  " + "="*51)
 
     # create network ----------------------------------------------------
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = Unet(class_num_=len(train_data.class_keys), depth_=depth_, image_ch_=img_channel_, target_ch_=target_channel_).to(device)
+    model = Unet(class_num_=class_num, depth_=depth_, image_ch_=img_channel_, target_ch_=target_channel_).to(device)
     print(f"Available Device = {device}")
 
     loss_func = nn.BCEWithLogitsLoss().to(device)
     # loss_func = nn.CrossEntropyLoss().to(device)
     optim = torch.optim.Adam(model.parameters(), lr=lr_)
-    acc = Accuracy(len(eval_data.class_keys))
+    iou = IOU(class_num) if target_channel_ is None else IOU(2)
 
     train_cnt_max = int(len(train_data) * data_rate_)
     eval_cnt_max = int(len(eval_data) * 0.05)
@@ -100,20 +101,20 @@ def train(args, cfg):
 
                 eval_output = model(eval_input)
 
-                img_mIOU = acc.compute_mIOU(eval_output, eval_label)
+                img_IOU = iou.IOU_bin(eval_output, eval_label)
                 eval_loss = loss_func(eval_output, eval_label)
 
                 loss_arr += [eval_loss.item()]
-                print(f" // loss mean = {np.mean(loss_arr)}", end="")
-                print(f"  //  mIOU = {img_mIOU}")
+                print(f" // loss mean : {np.mean(loss_arr)}", end="")
+                print(f"  //  IOU : {img_IOU*100:.2f}")
 
                 if idx >= eval_cnt_max: break
 
-            epoch_IOU, epoch_mIOU = acc.epoch_out_IOU()
+            epoch_IOU = iou.IOU_out()
         
         print("")
 
-        save_net(pth_path_, model, optim, e, np.mean(loss_arr), eval_data.class_keys, epoch_IOU, epoch_mIOU)
+        save_net(pth_path_, model, optim, e, np.mean(loss_arr), epoch_IOU)
 
 
 

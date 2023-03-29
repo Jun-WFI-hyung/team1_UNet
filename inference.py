@@ -3,7 +3,7 @@
 from net.Unet import Unet
 from net.UnetData import UnetData
 from utils.save_load import *
-from utils.accuracy import *
+from utils.IOU import *
 from utils.read_arg import *
 
 import os, cv2, json, time
@@ -17,7 +17,7 @@ from torchvision import transforms as transforms
 
 
 
-def save_log(infer_path, epoch, loss, cl_key, IOU, mIOU, F_time, E_time):
+def save_log(infer_path, epoch, loss, mIOU, F_time, E_time):
     log_path = os.path.join(infer_path, "log")
     log_file_name = "log_%04d.txt"%epoch
     if not os.path.exists(log_path):
@@ -28,27 +28,25 @@ def save_log(infer_path, epoch, loss, cl_key, IOU, mIOU, F_time, E_time):
         f.write(f"FPS : {F_time:.5f} sec\n")
         f.write(f"Inference time : {np.mean(E_time):.5f} sec\n")
         f.write(f"mIOU = {np.round(mIOU, 6)}\n")
-        for k, v in zip(cl_key, IOU):
-            f.write(f"  - {k} : {np.round(v, 6) if not np.isnan(v) else 0}\n")
 
     print("\n **  saved log  **")
     print(f" - loss mean      : {np.round(loss, 6)}")
     print(f" - FPS            : {F_time:.5f} sec")
     print(f" - Inference time : {np.mean(E_time):.5f} sec")
-    print(f" - mIOU           : {np.round(mIOU, 6) * 100:.2f} %")
+    print(f" - IOU            : {np.round(mIOU, 6) * 100:.2f} %")
 
 
 
-def save_img(infer_path, epoch, idx, max_idx, cl_keys, classes, total):
+def save_img(infer_path, epoch, idx, output, total):
     save_path = os.path.join(infer_path, "img")
     file_name = "epoch_%04d_%02d.png" % (epoch, idx)
 
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-    img = np.zeros((max_idx.shape[0], max_idx.shape[1], 3), dtype=np.uint8)
-    for cl_idx, cl in enumerate(cl_keys):
-        img[(max_idx == cl_idx).cpu().numpy()] = np.array(classes[cl])
+    print(f"output shape = {output.shape}")
+    img = np.zeros((output.shape[2], output.shape[3], 3), dtype=np.uint8)
+    img[(output[0,0,:,:] >= 1.0).cpu()] = np.array([255,255,255])
     
     print(f"save result ----- {idx+1} / {total}")
     cv2.imwrite(os.path.join(save_path, file_name), img)
@@ -79,10 +77,10 @@ def infer(args, cfg):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(f"Available Device = {device}")
     model = Unet(class_num_=class_num, depth_=depth_, image_ch_=img_channel_, target_ch_=target_channel_).to(device)
-    acc = Accuracy(class_num)
+    iou = IOU(class_num) if target_channel_ is None else IOU(2)
 
-    loss_func = nn.CrossEntropyLoss().to(device)
-    # loss_func = nn.BCEWithLogitsLoss().to(device)
+    # loss_func = nn.CrossEntropyLoss().to(device)
+    loss_func = nn.BCEWithLogitsLoss().to(device)
 
     # initialize model --------------------------------------------------
     model, epoch = load_net(pth_path_, file_name_, prefix_name, model)
@@ -104,29 +102,25 @@ def infer(args, cfg):
             infer_end = time.time()
             elapsed_time.append(infer_end - infer_start)
 
-            img_mIOU = acc.compute_mIOU(infer_output, infer_label)
-            
+            img_IOU = iou.IOU_bin(infer_output, infer_label)  
+
             infer_loss = loss_func(infer_output, infer_label)
             loss_arr += [infer_loss.item()]
 
             save_img(infer_path_, 
                      epoch, 
                      idx, 
-                     acc.max_idx,
-                     infer_data.class_keys,
-                     infer_data.classes,
+                     infer_output,
                      len(infer_data))
             
         fps_end = time.time()
         fps_time = (fps_end - fps_start) / cnt
 
-        epoch_IOU, epoch_mIOU = acc.epoch_out_IOU()
+        epoch_IOU = iou.IOU_out()
         save_log(infer_path_, 
                  epoch, 
                  np.mean(loss_arr),
-                 infer_data.class_keys,
-                 epoch_IOU,
-                 epoch_mIOU,
+                 epoch_IOU.cpu(),
                  fps_time,
                  elapsed_time)
         
