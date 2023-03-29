@@ -8,16 +8,9 @@ import numpy as np
 
 import torch
 import torch.nn as nn
-# from torch.utils.data import DataLoader
-# from torch.utils.tensorboard import SummaryWriter
+
 from torchvision import transforms as transforms
 from PIL import Image
-
-# import matplotlib.pyplot as plt
-
-# 다운샘플링 4번 -> 각각 (컨벌루션,배치정규화,ReLU) 2번 / 리스트.append / 맥스풀링(2)1번
-# 업샘플링 4번 -> 각각 (컨벌루션,배치정규화,ReLU) 2번 업컨벌루션(2x2)1번
-# 최종 클래스 매핑 -> (컨벌루션,배치정규화,ReLU) 2번 컨벌루션(1x1)1번
 
 class Unet(nn.Module):
     def __init__(self, class_num_:int, depth_:int, image_ch_:int):

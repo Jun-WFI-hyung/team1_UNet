@@ -1,5 +1,5 @@
 {
-    "epoch": 300,
+    "epoch": 1000000,
     "pth_path": "./carla_pth",
     "data_path": "./Carla_Data",
     "infer_path": "./infer",

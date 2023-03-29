@@ -1,0 +1,24 @@
+epoch = 15 // loss mean = 0.339418 // mIOU = 0.169191
+  - Unlabeled : 0
+  - Building : 0.166093
+  - Fence : 0
+  - Other : 0
+  - Pedestrian : 0
+  - Pole : 0.004381
+  - RoadLine : 0
+  - Road : 0.337097
+  - SideWalk : 0
+  - Vegetation : 0
+  - Vehicles : 0
+  - Wall : 0
+  - TrafficSign : 0
+  - Sky : 0
+  - Ground : 0
+  - Bridge : 0
+  - RailTrack : 0
+  - GuardRail : 0
+  - TrafficLight : 0
+  - Static : 0
+  - Dynamic : 0
+  - Water : 0
+  - Terrain : 0

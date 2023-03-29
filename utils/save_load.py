@@ -27,7 +27,7 @@ def save_net(pth_path, model, optim, epoch, loss, cl_key, IOU, mIOU):
     print("=" * 90 + "\n")
 
 
-
+'''
 def load_net(pth_path, file_name, prefix_name, model, optim=None):
     print("start load")
     if not os.path.exists(pth_path):
@@ -46,7 +46,33 @@ def load_net(pth_path, file_name, prefix_name, model, optim=None):
     else:
         print(f"load network --------------  inference {file_name}")
         return model, epoch
+'''
+def load_net(pth_path, file_name, prefix_name, model, optim=None):
+    print("start load")
+    if not os.path.exists(pth_path):
+        raise Exception("pth folder not found")
 
+    data = torch.load(os.path.join(pth_path, file_name))
+    epoch = int(file_name.lstrip(prefix_name).rstrip(".pth"))
+
+    # Change this part
+    model_dict = model.state_dict()
+    pretrained_dict = {k: v for k, v in data["model"].items() if k in model_dict}
+    for key, value in pretrained_dict.items():
+        if 'weight' in key or 'bias' in key:
+            model_dict[key] = value.dequantize()
+        else:
+            model_dict[key] = value
+    model.load_state_dict(model_dict)
+
+    if optim is not None: 
+        optim.load_state_dict(data["optim"])
+        print(f"load network --------------  start {epoch+1}")
+        return model, optim, epoch
+    
+    else:
+        print(f"load network --------------  inference {file_name}")
+        return model, epoch
 
 
 # def load_net_infer(pth_path, file_name, prefix_name, model):

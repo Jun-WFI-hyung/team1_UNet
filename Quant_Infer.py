@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from net.Unet import Unet
+from Quant_Unet2 import QuantizedUnet
 from net.UnetData import UnetData
 from utils.save_load import *
 from utils.accuracy import *
@@ -8,14 +9,13 @@ from utils.read_arg import *
 
 import os, cv2, json, time
 import numpy as np
+import torch.quantization as quantization
 
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import transforms as transforms
 # from torch.utils.tensorboard import SummaryWriter
-
-
 
 def save_log(infer_path, epoch, loss, cl_key, IOU, mIOU, F_time, E_time):
     log_path = os.path.join(infer_path, "log")
@@ -78,7 +78,7 @@ def infer(args, cfg):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     device = "cpu"
     print(f"Available Device = {device}")
-    model = Unet(class_num_=class_num, depth_=depth_, image_ch_=img_channel_).to(device)
+    model = QuantizedUnet(Unet(class_num_=class_num, depth_=depth_, image_ch_=img_channel_)).to(device)
     acc = Accuracy(class_num)
 
     loss_func = nn.CrossEntropyLoss().to(device)
@@ -86,35 +86,48 @@ def infer(args, cfg):
 
     # initialize model --------------------------------------------------
     model, epoch = load_net(pth_path_, file_name_, prefix_name, model)
+    model = quantization.convert(model, inplace=False)
+    print('---------------------------')
+    print(model)
+    print('---------------------------')
+    # min_g = []
+    # max_g = []
+    # for param in model.parameters():
+    #     print(param)
+    #     print(param.data.min(),param.data.max())
+    #     min_g.append(param.data.min().item())
+    #     max_g.append(param.data.max().item())
+    # print(min(min_g))
+    # print(max(max_g))
 
-    min_g = []
-    max_g = []
-    for param in model.parameters():
-        print(param)
-        print(param.data.min(),param.data.max())
-        min_g.append(param.data.min().item())
-        max_g.append(param.data.max().item())
-    print(min(min_g))
-    print(max(max_g))
+    print("----------------------")
+    for name, param in model.named_parameters():
+        print(f"{name}: {param.dtype}")
 
     with torch.no_grad():
         model.eval()
         loss_arr = []
         elapsed_time = []
         cnt = 0
-        infer = []
+
         fps_start = time.time()
+        infer = []
         for idx, i in enumerate(infer_loader):
             cnt += 1
             infer_input = i[0].to(device)
             infer_label = i[1].to(device)
 
             infer_start = time.time()
-            infer_output = model(infer_input)
+            # infer_output = model(infer_input)
+            with torch.autograd.profiler.profile() as prof:
+                infer_output = model(infer_input)
+            print(f"infer_output:{infer_output}")
+            print(prof.key_averages().table(sort_by="self_cpu_time_total"))
             infer_end = time.time()
             elapsed_time.append(infer_end - infer_start)
             print(infer_end - infer_start)
             infer.append(infer_end - infer_start)
+            print(f"Inference output dtype: {infer_output.dtype}")
 
             img_mIOU = acc.compute_mIOU(infer_output, infer_label)
             
@@ -141,7 +154,7 @@ def infer(args, cfg):
                  epoch_mIOU,
                  fps_time,
                  elapsed_time)
-    print(f"non_quant_min_infer:{sum(infer)/10}")
+    print(f"quant_min_infer:{sum(infer)/10}")
 
 
 if __name__ == "__main__":
