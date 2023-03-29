@@ -1,5 +1,5 @@
 {
-    "epoch": 300,
+    "epoch": 10,
     "pth_path": "./carla_pth",
     "data_path": "./Carla_Data",
     "infer_path": "./infer",
@@ -8,7 +8,7 @@
     "data_rate":0.5,
     "learning_rate":1e-4,
     "batch_size": 1,
-    "num_workers": 10,
+    "num_workers": 12,
     "depth": 4,
     "img_channel": 3,
     "target_channel": 6

@@ -93,6 +93,7 @@ def infer(args, cfg):
             infer_input = i[0].to(device)
             infer_label = i[1].to(device)
 
+            print(type(infer_input))
             infer_start = time.time()
             infer_output = model(infer_input)
             infer_end = time.time()

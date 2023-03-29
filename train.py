@@ -48,9 +48,10 @@ def train(args, cfg):
     # create network ----------------------------------------------------
     model = Unet(class_num_=class_num, depth_=depth_, image_ch_=img_channel_, target_ch_=target_channel_).to(device)
 
-    loss_func = DiceLoss_BIN(class_num)
-    sigmoid = nn.Sigmoid()
+    loss_func = DiceLoss_BIN(class_num, device).to(device)
     optim = torch.optim.Adam(model.parameters(), lr=lr_)
+    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer=optim,
+                                                  lr_lambda=lambda e: 0.95 ** e)
 
     train_cnt_max = int(len(train_data) * data_rate_)
     eval_cnt_max = int(len(eval_data) * 0.05)
@@ -66,30 +67,31 @@ def train(args, cfg):
         raise Exception("Put in pth filename")
 
     # start cycle -------------------------------------------------------
-    for e in range(start_epoch+1, start_epoch + epoch_ + 1):
+    for e in range(start_epoch+1, start_epoch + epoch_ + 2):
         e_start = time.time()
         model.train()
         loss_arr = []
+        log = []
 
         for idx, i in enumerate(train_loader):
             start = time.time()
-            print(f"epoch : {e} // idx : {idx}", end="")
             train_input = i[0].to(device)
             train_label = i[1].to(device)
             optim.zero_grad()
-
-            train_output = model(train_input)
-            train_output = sigmoid(train_output)
-            train_loss = loss_func(train_output, train_label)
+            
+            train_output = model(train_input)            
+            train_loss, IOU = loss_func(train_output, train_label)
             train_loss.backward()
 
             optim.step()
             loss_arr += [train_loss.item()]
-            end = time.time()            
-            print(f" // Dice Loss : {100-np.mean(loss_arr)*100:.5f} % // {end-start:.5f} sec")
+            end = time.time()
+            t = f"epoch : {e} / train : {idx} / loss mean : {np.mean(loss_arr):.5f} / IOU : {IOU.item()*100:.5f} % / {end-start:.5f} sec"
+            log.append(t)
+            print(t)
             if idx >= train_cnt_max: break
 
-        train_loss = 100 - np.mean(loss_arr)*100
+        train_loss = np.mean(loss_arr)
         print("")
         
         with torch.no_grad():
@@ -98,22 +100,24 @@ def train(args, cfg):
 
             for idx, i in enumerate(eval_loader):
                 start = time.time()
-                print(f"epoch : {e} // eval : {idx}", end="")
                 eval_input = i[0].to(device)
                 eval_label = i[1].to(device)
                 eval_output = model(eval_input)
-                eval_loss = loss_func(eval_output, eval_label)
+                eval_loss, IOU = loss_func(eval_output, eval_label)
                 eval_loss_arr += [eval_loss.item()]
                 end = time.time()
-                print(f" // Dice Loss : {100-np.mean(eval_loss_arr)*100:.5f} % // {end-start:.5f} sec")
-
+                t = f"epoch : {e} / eval : {idx} / loss mean : {np.mean(loss_arr):.5f} / IOU : {IOU.item()*100:.5f} % / {end-start:.5f} sec"
+                log.append(t)
+                print(t)
                 if idx >= eval_cnt_max: break
-            eval_loss = 100 - np.mean(eval_loss_arr)*100
+            eval_loss = np.mean(eval_loss_arr)
         
+        scheduler.step()
         print("")
         e_end = time.time()
         print(f"  - epoch elapsed time : {e_end-e_start:.5f} sec")
-        save_net(pth_path_, model, optim, e, train_loss, eval_loss, e_end-e_start)
+        print(f"  - learning rate : {optim.param_groups[0]['lr']}")
+        save_net(pth_path_, model, optim, e, train_loss, eval_loss, e_end-e_start, log)
 
 
 

@@ -1,4 +1,0 @@
-epoch : 38
-train_IOU : 2.04520 %
-eval _IOU : 3.40859 %
-elapsed time : 220.31763 sec

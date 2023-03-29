@@ -3,7 +3,7 @@
 import torch, os
 
 
-def save_net(pth_path, model, optim, epoch, train_iou, eval_iou, e_time):
+def save_net(pth_path, model, optim, epoch, train_loss, eval_loss, e_time, log):
     if not os.path.exists(pth_path):
         os.makedirs(pth_path)
 
@@ -17,9 +17,11 @@ def save_net(pth_path, model, optim, epoch, train_iou, eval_iou, e_time):
 
     with open(os.path.join(log_path, log_file_name), "w", encoding="utf-8") as f:
         f.write(f"epoch : {epoch}\n")
-        f.write(f"train_IOU : {train_iou:.5f} %\n")
-        f.write(f"eval _IOU : {eval_iou:.5f} %\n")
-        f.write(f"elapsed time : {e_time:.5f} sec\n")
+        f.write(f"train_loss : {train_loss:.5f}\n")
+        f.write(f"eval _loss : {eval_loss:.5f}\n")
+        f.write(f"epoch elapsed time : {e_time:.5f} sec\n\n")
+        f.write("[ log ]\n")
+        for i in log: f.write(i + "\n")
 
     print("  - save network")
     print("=" * 90 + "\n")
