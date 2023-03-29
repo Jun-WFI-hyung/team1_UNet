@@ -16,19 +16,21 @@ from torchvision import transforms as transforms
 
 
 
-def save_log(infer_path, epoch, loss, F_time, E_time):
+def save_log(infer_path, epoch, loss, IOU, F_time, E_time):
     log_path = os.path.join(infer_path, "log")
     log_file_name = "log_%04d.txt"%epoch
     if not os.path.exists(log_path):
         os.makedirs(log_path)
 
     with open(os.path.join(log_path, log_file_name), "w", encoding="utf-8") as f:
-        f.write(f"IOU : {loss:.5f} %\n")
+        f.write(f"loss : {loss:.5f} %\n")
+        f.write(f"IOU : {IOU*100:.5f} %\n")
         f.write(f"FPS : {F_time:.5f} sec\n")
         f.write(f"Inference time : {np.mean(E_time):.5f} sec\n")
 
     print("\n **  saved log  **")
-    print(f" - IOU - DiceLoss : {loss:.5f} %")
+    print(f" - loss           : {loss:.5f}")
+    print(f" - IOU            : {IOU*100:.5f}")
     print(f" - FPS            : {F_time:.5f} sec")
     print(f" - Inference time : {np.mean(E_time):.5f} sec")
 
@@ -41,7 +43,6 @@ def save_img(infer_path, epoch, idx, output, total):
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-    print(f"output shape = {output.shape}")
     img = np.zeros((output.shape[2], output.shape[3], 3), dtype=np.uint8)
     img[(output[0,0,:,:] >= 1.0).cpu()] = np.array([255,255,255])
     
@@ -76,7 +77,7 @@ def infer(args, cfg):
 
     # create network ----------------------------------------------------
     model = Unet(class_num_=class_num, depth_=depth_, image_ch_=img_channel_, target_ch_=target_channel_).to(device)
-    loss_func = DiceLoss_BIN(class_num)
+    loss_func = DiceLoss_BIN(class_num, device).to(device)
 
     # initialize model --------------------------------------------------
     model, epoch = load_net(pth_path_, file_name_, prefix_name, model)
@@ -84,6 +85,7 @@ def infer(args, cfg):
     with torch.no_grad():
         model.eval()
         loss_arr = []
+        IOU_arr = []
         elapsed_time = []
         cnt = 0
 
@@ -93,14 +95,14 @@ def infer(args, cfg):
             infer_input = i[0].to(device)
             infer_label = i[1].to(device)
 
-            print(type(infer_input))
             infer_start = time.time()
             infer_output = model(infer_input)
             infer_end = time.time()
             elapsed_time.append(infer_end - infer_start)
 
-            infer_loss = loss_func(infer_output, infer_label)
+            infer_loss, IOU = loss_func(infer_output, infer_label)
             loss_arr += [infer_loss.item()]
+            IOU_arr += [IOU.item()]
 
             save_img(infer_path_, 
                      epoch, 
@@ -113,7 +115,8 @@ def infer(args, cfg):
 
         save_log(infer_path_, 
                  epoch, 
-                 100-np.mean(loss_arr)*100,
+                 np.mean(loss_arr),
+                 np.mean(IOU_arr),
                  fps_time,
                  elapsed_time)
         
