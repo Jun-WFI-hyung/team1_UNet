@@ -7,9 +7,7 @@ from glob import glob
 from utils.ImgAug import *
 
 from matplotlib import pyplot as plt
-from PIL import Image
 
-import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from torchvision import transforms as transforms
@@ -54,7 +52,7 @@ class UnetData(Dataset):
             print(f"<loading> {in_} ............ {cnt} / {self.total_}")
             self.input_.append(cv2.imread(in_))
             self.label_.append(cv2.imread(la_))
-            if cnt >= 10: break
+            # if cnt >= 10: break
 
         # calc input border size
         self.pad = 4 * (2**depth_ + sum([2**(d+1) for d in range(depth_)])) // 2
