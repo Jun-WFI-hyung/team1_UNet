@@ -48,7 +48,7 @@ def train(args, cfg):
     # create network ----------------------------------------------------
     model = Unet(class_num_=class_num, depth_=depth_, image_ch_=img_channel_, target_ch_=target_channel_).to(device)
 
-    loss_func = DiceLoss_BIN(class_num, device).to(device)
+    loss_func = nn.BCEWithLogitsLoss().to(device)
     optim = torch.optim.Adam(model.parameters(), lr=lr_)
     scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer=optim,
                                                   lr_lambda=lambda e: 0.95 ** e)
@@ -80,7 +80,8 @@ def train(args, cfg):
             optim.zero_grad()
             
             train_output = model(train_input)            
-            train_loss, IOU = loss_func(train_output, train_label)
+            train_loss = loss_func(train_output, train_label)
+            IOU = IOU_bin(train_output, train_label)
             train_loss.backward()
 
             optim.step()
@@ -103,7 +104,8 @@ def train(args, cfg):
                 eval_input = i[0].to(device)
                 eval_label = i[1].to(device)
                 eval_output = model(eval_input)
-                eval_loss, IOU = loss_func(eval_output, eval_label)
+                eval_loss = loss_func(eval_output, eval_label)
+                IOU = IOU_bin(eval_output, eval_label)
                 eval_loss_arr += [eval_loss.item()]
                 end = time.time()
                 t = f"epoch : {e} / eval : {idx} / loss mean : {np.mean(loss_arr):.5f} / IOU : {IOU.item()*100:.5f} % / {end-start:.5f} sec"

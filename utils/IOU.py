@@ -4,10 +4,6 @@ import torch.nn.functional as F
 
 
 def IOU_bin(output:torch.Tensor, label:torch.Tensor):
-    smooth = 1.
-    output = output.requires_grad_(True)
-    label = label.requires_grad_(True)
-
     sigmoid = nn.Sigmoid()
     output = sigmoid(output)
 

@@ -77,7 +77,7 @@ def infer(args, cfg):
 
     # create network ----------------------------------------------------
     model = Unet(class_num_=class_num, depth_=depth_, image_ch_=img_channel_, target_ch_=target_channel_).to(device)
-    loss_func = DiceLoss_BIN(class_num, device).to(device)
+    loss_func = nn.BCEWithLogitsLoss().to(device)
 
     # initialize model --------------------------------------------------
     model, epoch = load_net(pth_path_, file_name_, prefix_name, model)
@@ -100,7 +100,9 @@ def infer(args, cfg):
             infer_end = time.time()
             elapsed_time.append(infer_end - infer_start)
 
-            infer_loss, IOU = loss_func(infer_output, infer_label)
+            infer_loss = loss_func(infer_output, infer_label)
+            IOU = IOU_bin(infer_output, infer_label)
+
             loss_arr += [infer_loss.item()]
             IOU_arr += [IOU.item()]
 
