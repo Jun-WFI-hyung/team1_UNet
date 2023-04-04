@@ -67,7 +67,7 @@ def train(args, cfg):
         raise Exception("Put in pth filename")
 
     # start cycle -------------------------------------------------------
-    for e in range(start_epoch+1, start_epoch + epoch_ + 2):
+    for e in range(start_epoch+1, start_epoch + epoch_ + 1):
         e_start = time.time()
         model.train()
         loss_arr = []

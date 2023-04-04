@@ -1,0 +1,4 @@
+loss : 0.10410 %
+IOU : 84.49371 %
+FPS : 0.10966 sec
+Inference time : 0.00465 sec

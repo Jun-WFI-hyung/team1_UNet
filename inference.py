@@ -29,10 +29,10 @@ def save_log(infer_path, epoch, loss, IOU, F_time, E_time):
         f.write(f"Inference time : {np.mean(E_time):.5f} sec\n")
 
     print("\n **  saved log  **")
-    print(f" - loss           : {loss:.5f}")
-    print(f" - IOU            : {IOU*100:.5f}")
-    print(f" - FPS            : {F_time:.5f} sec")
-    print(f" - Inference time : {np.mean(E_time):.5f} sec")
+    print(f" - loss              : {loss:.5f}")
+    print(f" - IOU               : {IOU*100:.5f}")
+    print(f" - Seconds per frame : {F_time:.5f} sec")
+    print(f" - Inference time    : {np.mean(E_time):.5f} sec")
 
 
 
